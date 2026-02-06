@@ -17,8 +17,7 @@ import numpy as np
 from werkzeug.utils import secure_filename
 import uuid
 
-# FIXED: Set template folder to current directory for Render deployment
-# This line should be in your app.py
+# FIXED: Set template folder to current directory and static folder to 'static'
 app = Flask(__name__, template_folder='.', static_folder='static', static_url_path='/static')
 
 # Railway configuration
@@ -488,6 +487,19 @@ def logout():
 @app.route('/')
 def home():
     return render_template('home.html')
+
+@app.route('/test')
+def test():
+    return "✅ App is working! CSS should load now."
+
+@app.route('/debug-static')
+def debug_static():
+    """Debug endpoint to check static files"""
+    import os
+    files = []
+    if os.path.exists('static'):
+        files = os.listdir('static')
+    return f"Static folder contents: {files}"
 
 @app.route('/dashboard')
 @login_required
