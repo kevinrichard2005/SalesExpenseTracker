@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Dashboard | Data Analyzer</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .upload-section {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            margin-bottom: var(--space-xl);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .upload-box {
+            border: 3px dashed var(--primary);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            background: var(--light);
+        }
+        
+        .upload-box:hover {
+            border-color: var(--accent);
+            background: rgba(67, 97, 238, 0.05);
+            transform: translateY(-2px);
+        }
+        
+        .upload-box.dragover {
+            border-color: var(--success);
+            background: rgba(76, 201, 240, 0.1);
+            transform: scale(1.02);
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            color: var(--primary);
+            margin-bottom: var(--space-md);
+        }
+        
+        .upload-text h3 {
+            color: var(--dark);
+            margin-bottom: var(--space-sm);
+        }
+        
+        .upload-text p {
+            color: var(--medium-gray);
+            margin-bottom: var(--space-lg);
+        }
+        
+        .upload-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: var(--space-md) var(--space-xl);
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+        
+        .upload-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .file-info {
+            margin-top: var(--space-lg);
+            padding: var(--space-md);
+            background: var(--light);
+            border-radius: var(--radius-md);
+            display: none;
+            animation: slideIn 0.3s;
+        }
+        
+        .file-info.show {
+            display: block;
+        }
+        
+        .file-actions {
+            display: flex;
+            gap: var(--space-sm);
+            margin-top: var(--space-lg);
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .current-file {
+            background: rgba(33, 150, 243, 0.1);
+            padding: var(--space-md);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-lg);
+            border-left: 4px solid var(--primary);
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            display: none;
+        }
+        
+        .spinner-large {
+            width: 80px;
+            height: 80px;
+            border: 6px solid var(--light-gray);
+            border-top: 6px solid var(--primary);
+            border-radius: var(--radius-circle);
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--space-lg);
+            margin-top: var(--space-xl);
+        }
+        
+        .insight-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            box-shadow: var(--shadow-md);
+            border-left: 4px solid;
+        }
+        
+        .insight-card.success { border-left-color: var(--success); }
+        .insight-card.info { border-left-color: var(--primary); }
+        .insight-card.warning { border-left-color: var(--warning); }
+        .insight-card.google { border-left-color: var(--google-blue); }
+        
+        .insight-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            margin-bottom: var(--space-md);
+        }
+        
+        .insight-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: white;
+        }
+        
+        .insight-card.success .insight-icon { background: var(--success); }
+        .insight-card.info .insight-icon { background: var(--primary); }
+        .insight-card.warning .insight-icon { background: var(--warning); }
+        .insight-card.google .insight-icon { background: var(--google-blue); }
+        
+        .insight-title {
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 1rem;
+        }
+        
+        .insight-text {
+            color: var(--medium-gray);
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-sm) var(--space-md);
+            background: var(--light);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-lg);
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-circle);
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            overflow: hidden;
+        }
+        
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-logo">
+                <i class="fas fa-chart-line"></i>
+                <span>Sales Analyzer</span>
+            </div>
+            <div class="nav-actions">
+                <a href="/" class="btn btn-outline">
+                    <i class="fas fa-home"></i> Home
+                </a>
+                <a href="/profile" class="btn btn-outline">
+                    {% if current_user.google_id %}
+                        <i class="fab fa-google" style="color: #4285F4;"></i>
+                    {% else %}
+                        <i class="fas fa-user"></i>
+                    {% endif %}
+                    Profile
+                </a>
+                <a href="/logout" class="btn btn-primary">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container" style="padding: var(--space-xl) 0;">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-circle{% elif category == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Dashboard Header -->
+        <div class="glass mb-5">
+            <div class="user-info">
+                <div class="user-avatar">
+                    {% if current_user.profile_pic %}
+                        <img src="{{ current_user.profile_pic }}" alt="{{ current_user.name }}">
+                    {% else %}
+                        {{ current_user.name[0] if current_user.name else current_user.email[0] }}
+                    {% endif %}
+                </div>
+                <div>
+                    <h3 style="margin: 0; font-size: 1.5rem;">
+                        Welcome, {{ current_user.name if current_user.name else current_user.email }}!
+                        {% if current_user.google_id %}
+                            <span style="color: #4285F4; font-size: 0.9rem;">
+                                <i class="fab fa-google"></i> Google Account
+                            </span>
+                        {% endif %}
+                    </h3>
+                    <p style="margin: 0; color: var(--medium-gray);">
+                        Analysis generated on: <strong id="timestamp">{{ timestamp }}</strong>
+                    </p>
+                </div>
+            </div>
+            
+            {% if filename %}
+            <div class="current-file">
+                <i class="fas fa-file-alt"></i>
+                <div>
+                    <strong>Current file:</strong> {{ filename }}
+                    <span id="rowCount" style="color: var(--medium-gray); font-size: 0.9rem;">
+                        {% if data and data|length > 1 %}({{ data|length - 1 }} rows){% endif %}
+                    </span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Upload Section -->
+        <div class="upload-section">
+            <h2 style="margin-bottom: var(--space-lg); color: var(--dark);">Upload New Data</h2>
+            
+            <div class="upload-box" id="uploadBox">
+                <div class="upload-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <div class="upload-text">
+                    <h3>Drag & Drop Your File Here</h3>
+                    <p>Supported formats: CSV, Excel (XLS, XLSX)</p>
+                    <p style="font-size: 0.9rem; color: var(--medium-gray);">Maximum file size: 16MB</p>
+                    <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                        <i class="fas fa-folder-open"></i> Browse Files
+                    </button>
+                </div>
+                <input type="file" id="fileInput" class="file-input" accept=".csv,.xlsx,.xls">
+            </div>
+            
+            <div class="file-actions">
+                <button class="btn btn-secondary" onclick="loadSampleData()">
+                    <i class="fas fa-database"></i> Load Sample Data
+                </button>
+                <button class="btn btn-secondary" onclick="clearData()">
+                    <i class="fas fa-redo"></i> Clear Data
+                </button>
+                <a href="/export/csv" class="btn btn-primary">
+                    <i class="fas fa-download"></i> Export Report
+                </a>
+                <a href="/profile" class="btn btn-outline">
+                    <i class="fas fa-user"></i> My Profile
+                </a>
+            </div>
+            
+            <div id="fileInfo" class="file-info"></div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="spinner-large"></div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="kpi-grid">
+            <div class="kpi-card sales">
+                <div class="kpi-header">
+                    <div>
+                        <div class="kpi-title">Total Sales</div>
+                        <div class="kpi-value">₹{{ "%.2f"|format(results.total_sales) }}</div>
+                        <div class="kpi-change positive">
+                            <i class="fas fa-rupee-sign"></i>
+                            <span>Revenue Generated</span>
+                        </div>
+                    </div>
+                    <div class="kpi-icon sales">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="kpi-card orders">
+                <div class="kpi-header">
+                    <div>
+                        <div class="kpi-title">Total Orders</div>
+                        <div class="kpi-value">{{ results.total_orders }}</div>
+                        <div class="kpi-change positive">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span>Transactions</span>
+                        </div>
+                    </div>
+                    <div class="kpi-icon orders">
+                        <i class="fas fa-receipt"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="kpi-card aov">
+                <div class="kpi-header">
+                    <div>
+                        <div class="kpi-title">Avg Order Value</div>
+                        <div class="kpi-value">₹{{ "%.2f"|format(results.avg_order_value) }}</div>
+                        <div class="kpi-change positive">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Per Transaction</span>
+                        </div>
+                    </div>
+                    <div class="kpi-icon aov">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="kpi-card growth">
+                <div class="kpi-header">
+                    <div>
+                        <div class="kpi-title">Best Product</div>
+                        <div class="kpi-value">{{ results.best_product }}</div>
+                        <div class="kpi-change positive">
+                            <i class="fas fa-trophy"></i>
+                            <span>Top Seller</span>
+                        </div>
+                    </div>
+                    <div class="kpi-icon growth">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="kpi-card customers">
+                <div class="kpi-header">
+                    <div>
+                        <div class="kpi-title">Top Category</div>
+                        <div class="kpi-value">{{ results.top_category }}</div>
+                        <div class="kpi-change positive">
+                            <i class="fas fa-boxes"></i>
+                            <span>Leading Category</span>
+                        </div>
+                    </div>
+                    <div class="kpi-icon customers">
+                        <i class="fas fa-tags"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="kpi-card region">
+                <div class="kpi-header">
+                    <div>
+                        <div class="kpi-title">Top Region</div>
+                        <div class="kpi-value">{{ results.top_region }}</div>
+                        <div class="kpi-change positive">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Best Performing</span>
+                        </div>
+                    </div>
+                    <div class="kpi-icon region">
+                        <i class="fas fa-globe-asia"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="section">
+            <h2 class="section-title">Data Visualizations</h2>
+            
+            {% if charts %}
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {% if charts.products %}
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <div class="chart-title">Top Products by Sales</div>
+                        <div class="chart-actions">
+                            <button onclick="downloadChart('{{ charts.products }}')" class="btn btn-icon btn-secondary">
+                                <i class="fas fa-download"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <img src="{{ charts.products }}" alt="Products Chart">
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if charts.categories %}
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <div class="chart-title">Sales by Category</div>
+                        <div class="chart-actions">
+                            <button onclick="downloadChart('{{ charts.categories }}')" class="btn btn-icon btn-secondary">
+                                <i class="fas fa-download"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <img src="{{ charts.categories }}" alt="Categories Chart">
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if charts.regions %}
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <div class="chart-title">Sales by Region</div>
+                        <div class="chart-actions">
+                            <button onclick="downloadChart('{{ charts.regions }}')" class="btn btn-icon btn-secondary">
+                                <i class="fas fa-download"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <img src="{{ charts.regions }}" alt="Regions Chart">
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if charts.monthly %}
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <div class="chart-title">Monthly Sales Trend</div>
+                        <div class="chart-actions">
+                            <button onclick="downloadChart('{{ charts.monthly }}')" class="btn btn-icon btn-secondary">
+                                <i class="fas fa-download"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <img src="{{ charts.monthly }}" alt="Monthly Chart">
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="chart-container">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div class="loading-text">No chart data available. Upload data to generate charts.</div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Insights -->
+        <div class="section">
+            <h2 class="section-title">Insights & Recommendations</h2>
+            <div class="insights-grid">
+                <div class="insight-card success">
+                    <div class="insight-header">
+                        <div class="insight-icon">
+                            <i class="fas fa-lightbulb"></i>
+                        </div>
+                        <div class="insight-title">Top Performer</div>
+                    </div>
+                    <div class="insight-text">
+                        <strong>{{ results.best_product }}</strong> is your best-selling product. 
+                        Consider increasing inventory and creating promotional campaigns around this product.
+                    </div>
+                </div>
+                
+                <div class="insight-card info">
+                    <div class="insight-header">
+                        <div class="insight-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div class="insight-title">Regional Opportunity</div>
+                    </div>
+                    <div class="insight-text">
+                        <strong>{{ results.top_region }}</strong> region shows the highest sales performance. 
+                        Focus marketing efforts here for maximum return on investment.
+                    </div>
+                </div>
+                
+                <div class="insight-card warning">
+                    <div class="insight-header">
+                        <div class="insight-icon">
+                            <i class="fas fa-boxes"></i>
+                        </div>
+                        <div class="insight-title">Category Strategy</div>
+                    </div>
+                    <div class="insight-text">
+                        <strong>{{ results.top_category }}</strong> category is performing exceptionally well. 
+                        Consider bundling products or creating special category-wide promotions.
+                    </div>
+                </div>
+                
+                <div class="insight-card google">
+                    <div class="insight-header">
+                        <div class="insight-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="insight-title">Growth Strategy</div>
+                    </div>
+                    <div class="insight-text">
+                        Your average order value is ₹{{ "%.2f"|format(results.avg_order_value) }}. 
+                        Implement cross-selling and upselling strategies to increase this value.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Preview -->
+        <div class="section">
+            <h2 class="section-title">Data Preview</h2>
+            <div class="data-table-container">
+                <div class="table-responsive">
+                    {% if data and data|length > 1 %}
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                {% for header in data[0] %}
+                                <th>{{ header }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in data[1:21] %}
+                            <tr>
+                                {% for cell in row %}
+                                <td>{{ cell }}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="loading">
+                        <i class="fas fa-database" style="font-size: 48px; color: #ccc; margin-bottom: 15px;"></i>
+                        <div class="loading-text">No data available for preview</div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% if data and data|length > 21 %}
+                <div style="padding: 15px; text-align: center; background: #f8f9fa; color: #666;">
+                    Showing first 20 rows of {{ data|length - 1 }} total rows
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Alert -->
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            <div>
+                <strong>Analysis Complete!</strong> 
+                You can download the complete report using the "Export Report" button above.
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Sales Data Analyzer</h3>
+                    <p>Advanced analytics platform for sales data visualization and insights generation.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <div class="footer-links">
+                        <a href="/dashboard"><i class="fas fa-chart-bar"></i> Dashboard</a>
+                        <a href="/profile"><i class="fas fa-user"></i> Profile</a>
+                        <a href="/export/csv"><i class="fas fa-download"></i> Export</a>
+                        <a href="/clear"><i class="fas fa-redo"></i> Clear Data</a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3>Support</h3>
+                    <p>For assistance, contact: support@salesanalyzer.com</p>
+                    <p>Version: 2.0.0</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Sales Data Analyzer | College Mini Project | Computer Science Department</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // DOM Elements
+        const uploadBox = document.getElementById('uploadBox');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const timestampElement = document.getElementById('timestamp');
+        
+        // Set current time if timestamp is empty
+        if (!timestampElement.textContent || timestampElement.textContent.includes('timestamp')) {
+            const now = new Date().toLocaleString();
+            timestampElement.textContent = now;
+        }
+        
+        // File upload handlers
+        uploadBox.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadBox.classList.add('dragover');
+        });
+        
+        uploadBox.addEventListener('dragleave', () => {
+            uploadBox.classList.remove('dragover');
+        });
+        
+        uploadBox.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadBox.classList.remove('dragover');
+            
+            if (e.dataTransfer.files.length) {
+                const file = e.dataTransfer.files[0];
+                handleFileUpload(file);
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                const file = e.target.files[0];
+                handleFileUpload(file);
+            }
+        });
+        
+        function handleFileUpload(file) {
+            // Validate file
+            const validTypes = ['text/csv', 'application/vnd.ms-excel', 
+                               'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+            const validExtensions = ['.csv', '.xls', '.xlsx'];
+            
+            const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+            
+            if (!validExtensions.includes(fileExtension) && !validTypes.includes(file.type)) {
+                showFileInfo('Please upload CSV or Excel files only.', 'error');
+                return;
+            }
+            
+            if (file.size > 16 * 1024 * 1024) {
+                showFileInfo('File size exceeds 16MB limit.', 'error');
+                return;
+            }
+            
+            // Show file info
+            showFileInfo(`Selected file: <strong>${file.name}</strong> (${formatFileSize(file.size)})`, 'info');
+            
+            // Upload file
+            uploadFile(file);
+        }
+        
+        function uploadFile(file) {
+            showLoading(true);
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            // Use AJAX for better user experience
+            fetch('/upload_ajax', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                showLoading(false);
+                
+                if (data.success) {
+                    showFileInfo(`✅ ${data.message}<br>Processed ${data.rows_processed} rows. Total Sales: ${data.total_sales}`, 'success');
+                    
+                    // Reload page after 1.5 seconds to show updated data
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showFileInfo(`❌ ${data.error}`, 'error');
+                }
+            })
+            .catch(error => {
+                showLoading(false);
+                showFileInfo('❌ Upload failed. Please try again.', 'error');
+                console.error('Upload error:', error);
+            });
+        }
+        
+        function loadSampleData() {
+            showLoading(true);
+            window.location.href = '/sample';
+        }
+        
+        function clearData() {
+            if (confirm('Are you sure you want to clear all analysis data?')) {
+                showLoading(true);
+                window.location.href = '/clear';
+            }
+        }
+        
+        function downloadChart(chartPath) {
+            const link = document.createElement('a');
+            link.href = chartPath;
+            link.download = chartPath.split('/').pop();
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        function showFileInfo(message, type) {
+            fileInfo.innerHTML = message;
+            fileInfo.className = 'file-info show';
+            
+            // Set color based on type
+            if (type === 'success') {
+                fileInfo.style.background = 'rgba(76, 201, 240, 0.1)';
+                fileInfo.style.borderLeft = '4px solid #4cc9f0';
+            } else if (type === 'error') {
+                fileInfo.style.background = 'rgba(239, 35, 60, 0.1)';
+                fileInfo.style.borderLeft = '4px solid #ef233c';
+            } else {
+                fileInfo.style.background = 'rgba(67, 97, 238, 0.1)';
+                fileInfo.style.borderLeft = '4px solid #4361ee';
+            }
+        }
+        
+        function showLoading(show) {
+            loadingOverlay.style.display = show ? 'flex' : 'none';
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Auto-refresh data every 30 seconds if on dashboard
+        setInterval(() => {
+            if (window.location.pathname === '/dashboard') {
+                fetch('/api/analysis_data')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.timestamp && data.timestamp !== timestampElement.textContent) {
+                            timestampElement.textContent = data.timestamp;
+                        }
+                    });
+            }
+        }, 30000);
+        
+        // Auto-hide flash messages
+        setTimeout(() => {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                alert.style.opacity = '0';
+                alert.style.transform = 'translateX(100%)';
+                setTimeout(() => alert.remove(), 300);
+            });
+        }, 5000);
+    </script>
+</body>
+</html>

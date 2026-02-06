@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Sales Analyzer</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-logo">
+                <i class="fas fa-chart-line"></i>
+                <span>Sales Analyzer</span>
+            </div>
+            <div class="nav-actions">
+                <a href="/dashboard" class="btn btn-outline">
+                    <i class="fas fa-dashboard"></i> Dashboard
+                </a>
+                <a href="/" class="btn btn-outline">
+                    <i class="fas fa-home"></i> Home
+                </a>
+                <a href="/logout" class="btn btn-primary">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Profile Content -->
+    <div class="container" style="padding: var(--space-xl) 0;">
+        <!-- Flash Messages -->
+        <div class="flash-messages">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+        
+        <!-- Profile Header -->
+        <div class="profile-header">
+            <div class="profile-avatar">
+                {% if user.profile_pic %}
+                    <img src="{{ user.profile_pic }}" alt="{{ user.name }}">
+                {% elif user.name %}
+                    {{ user.name[0].upper() }}
+                {% else %}
+                    {{ user.email[0].upper() }}
+                {% endif %}
+            </div>
+            <h1>{{ user.name if user.name else user.email }}</h1>
+            <p>
+                Member since {{ user.created_at.strftime('%B %d, %Y') if user.created_at else 'Recently' }}
+                {% if user.google_id %}
+                    <span style="color: #4285F4; margin-left: var(--space-sm);">
+                        <i class="fab fa-google"></i> Google Account
+                    </span>
+                {% endif %}
+            </p>
+        </div>
+        
+        <!-- Profile Grid -->
+        <div class="profile-grid">
+            <!-- Personal Information -->
+            <div class="profile-card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="card-title">Personal Information</div>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Full Name</span>
+                    <div class="info-value">{{ user.name if user.name else 'Not provided' }}</div>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Email Address</span>
+                    <div class="info-value">{{ user.email }}</div>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Phone Number</span>
+                    <div class="info-value">{{ user.phone if user.phone else 'Not provided' }}</div>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Login Method</span>
+                    <div class="info-value">
+                        {% if user.google_id %}
+                            <span style="color: #4285F4; font-weight: bold;">
+                                <i class="fab fa-google"></i> Google Account
+                            </span>
+                        {% else %}
+                            <i class="fas fa-envelope"></i> Email Account
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if user.google_id %}
+                <div class="info-item">
+                    <span class="info-label">Google ID</span>
+                    <div class="info-value" style="font-size: 12px; color: #666; word-break: break-all;">
+                        {{ user.google_id }}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if user.profile_pic %}
+                <div class="info-item">
+                    <span class="info-label">Profile Picture</span>
+                    <div class="info-value">
+                        <img src="{{ user.profile_pic }}" alt="Profile" style="width: 50px; height: 50px; border-radius: 50%;">
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Account Stats -->
+            <div class="profile-card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div class="card-title">Account Statistics</div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value">
+                            {% if user.created_at %}
+                                {{ user.created_at.strftime('%d') }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </div>
+                        <div class="stat-label">Join Day</div>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <div class="stat-value">{{ days_active }}</div>
+                        <div class="stat-label">Days Active</div>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <div class="stat-value">
+                            {% if user.last_login %}
+                                {{ user.last_login.strftime('%b %d') }}
+                            {% else %}
+                                Never
+                            {% endif %}
+                        </div>
+                        <div class="stat-label">Last Login</div>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <div class="stat-value">
+                            {% if user.is_active %}
+                                <span style="color: var(--success);">Active</span>
+                            {% else %}
+                                <span style="color: var(--danger);">Inactive</span>
+                            {% endif %}
+                        </div>
+                        <div class="stat-label">Status</div>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <div class="stat-value">{{ analyses_count }}</div>
+                        <div class="stat-label">Analyses</div>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <div class="stat-value">
+                            {% if user.google_id %}
+                                Google
+                            {% else %}
+                                Email
+                            {% endif %}
+                        </div>
+                        <div class="stat-label">Auth Type</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Account Actions -->
+            <div class="profile-card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    <div class="card-title">Account Actions</div>
+                </div>
+                
+                <div class="actions-grid">
+                    <button class="action-btn" onclick="alert('Feature coming soon!')">
+                        <i class="fas fa-edit"></i> Edit Profile
+                    </button>
+                    
+                    <button class="action-btn" onclick="alert('Feature coming soon!')">
+                        <i class="fas fa-lock"></i> Change Password
+                    </button>
+                    
+                    <button class="action-btn" onclick="window.location.href='/dashboard'">
+                        <i class="fas fa-upload"></i> Upload Data
+                    </button>
+                    
+                    <button class="action-btn" onclick="window.location.href='/export/csv'">
+                        <i class="fas fa-download"></i> Export Reports
+                    </button>
+                    
+                    <button class="action-btn" onclick="window.print()">
+                        <i class="fas fa-print"></i> Print Profile
+                    </button>
+                    
+                    <a href="/logout" class="action-btn" style="text-decoration: none;">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+                
+                <!-- Demo Info -->
+                <div class="demo-info" style="margin-top: var(--space-lg);">
+                    <h3 style="color: var(--primary);">Account Information</h3>
+                    <p style="font-size: 0.9rem; color: var(--medium-gray);">
+                        <strong>User ID:</strong> {{ user.id }}<br>
+                        <strong>Registered:</strong> {{ user.created_at.strftime('%Y-%m-%d %H:%M') if user.created_at else 'Unknown' }}<br>
+                        <strong>Last Login:</strong> {{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else 'Never' }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; {{ now.year if now else 2024 }} Sales Data Analyzer | College Mini Project</p>
+            <p>Logged in as: {{ user.email }} | User ID: {{ user.id }}</p>
+        </div>
+    </footer>
+    
+    <script>
+        // Auto-hide flash messages
+        setTimeout(() => {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 300);
+            });
+        }, 5000);
+    </script>
+</body>
+</html>

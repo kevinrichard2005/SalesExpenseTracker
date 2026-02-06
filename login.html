@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sales Analyzer</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .password-wrapper {
+            position: relative;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--medium-gray);
+            cursor: pointer;
+            padding: 5px;
+            font-size: 16px;
+        }
+        
+        .password-toggle:hover {
+            color: var(--primary);
+        }
+        
+        .demo-accounts {
+            background: rgba(67, 97, 238, 0.1);
+            padding: var(--space-lg);
+            border-radius: var(--radius-md);
+            margin-top: var(--space-xl);
+            border-left: 4px solid var(--primary);
+        }
+        
+        .demo-accounts h3 {
+            color: var(--primary);
+            margin-bottom: var(--space-sm);
+            font-size: 1.1rem;
+        }
+        
+        .demo-list {
+            margin-top: var(--space-md);
+        }
+        
+        .demo-list li {
+            color: var(--dark-gray);
+            margin-bottom: var(--space-xs);
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+        }
+        
+        .demo-list .copy-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 3px 10px;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+        
+        .demo-list .copy-btn:hover {
+            background: var(--primary-dark);
+        }
+        
+        .form-check {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            margin: var(--space-md) 0 var(--space-lg);
+        }
+        
+        .form-check-input {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+        
+        .form-check-label {
+            color: var(--medium-gray);
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-icon">
+                    <i class="fas fa-sign-in-alt"></i>
+                </div>
+                <h1>Welcome Back</h1>
+                <p>Sign in to access your sales dashboard</p>
+            </div>
+            
+            <!-- Flash Messages -->
+            <div class="flash-messages">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">
+                                <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-circle{% elif category == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                                <span>{{ message }}</span>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+            </div>
+            
+            <!-- Login Form -->
+            <form method="POST" action="/login" id="loginForm">
+                <div class="form-group">
+                    <label class="form-label">Email Address *</label>
+                    <input type="email" name="identifier" class="form-input" placeholder="Enter your email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Password *</label>
+                    <div class="password-wrapper">
+                        <input type="password" name="password" id="password" class="form-input" placeholder="Enter your password" required>
+                        <button type="button" class="password-toggle" id="togglePassword">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="form-check">
+                    <input type="checkbox" name="remember" id="remember" class="form-check-input">
+                    <label for="remember" class="form-check-label">Remember me</label>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> Sign In
+                </button>
+            </form>
+            
+            <!-- Demo Accounts (for testing) -->
+            <div class="demo-accounts">
+                <h3>Demo Accounts (For Testing)</h3>
+                <p style="font-size: 0.9rem; color: var(--dark-gray); margin-bottom: var(--space-sm);">
+                    Use these credentials to test the application:
+                </p>
+                <ul class="demo-list">
+                    <li>
+                        <span><strong>Email:</strong> admin@example.com</span>
+                        <button class="copy-btn" onclick="copyToClipboard('admin@example.com')">Copy</button>
+                    </li>
+                    <li>
+                        <span><strong>Password:</strong> admin123</span>
+                        <button class="copy-btn" onclick="copyToClipboard('admin123')">Copy</button>
+                    </li>
+                    <li>
+                        <span><strong>Email:</strong> user@example.com</span>
+                        <button class="copy-btn" onclick="copyToClipboard('user@example.com')">Copy</button>
+                    </li>
+                    <li>
+                        <span><strong>Password:</strong> user123</span>
+                        <button class="copy-btn" onclick="copyToClipboard('user123')">Copy</button>
+                    </li>
+                </ul>
+                <p style="font-size: 0.85rem; margin-top: var(--space-sm); color: var(--medium-gray);">
+                    <i class="fas fa-info-circle"></i> You can also create your own account via Register
+                </p>
+            </div>
+            
+            <!-- Links -->
+            <div class="auth-links">
+                <a href="/register" class="auth-link">Create Account</a>
+                <a href="/" class="auth-link">Back to Home</a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Password show/hide toggle
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+        
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            // Toggle eye icon
+            const eyeIcon = this.querySelector('i');
+            if (type === 'text') {
+                eyeIcon.classList.remove('fa-eye');
+                eyeIcon.classList.add('fa-eye-slash');
+            } else {
+                eyeIcon.classList.remove('fa-eye-slash');
+                eyeIcon.classList.add('fa-eye');
+            }
+        });
+        
+        // Copy to clipboard function
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                // Show temporary success message
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                btn.style.background = 'var(--success)';
+                
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = 'var(--primary)';
+                }, 1500);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+        }
+        
+        // Auto-hide flash messages
+        setTimeout(() => {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 300);
+            });
+        }, 5000);
+        
+        // Auto-fill demo credentials on double click
+        document.addEventListener('DOMContentLoaded', function() {
+            const emailInput = document.querySelector('input[name="identifier"]');
+            const passwordInput = document.getElementById('password');
+            
+            // Quick fill on double click
+            emailInput.addEventListener('dblclick', function() {
+                this.value = 'admin@example.com';
+            });
+            
+            passwordInput.addEventListener('dblclick', function() {
+                this.value = 'admin123';
+            });
+            
+            // Focus on first input
+            emailInput.focus();
+        });
+        
+        // Form validation
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            const email = this.querySelector('input[name="identifier"]').value.trim();
+            const password = this.querySelector('input[name="password"]').value.trim();
+            
+            if (!email || !password) {
+                e.preventDefault();
+                alert('Please fill in all fields');
+                return false;
+            }
+            
+            // Simple email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                e.preventDefault();
+                alert('Please enter a valid email address');
+                return false;
+            }
+            
+            return true;
+        });
+        
+        // Enter key submits form
+        document.querySelectorAll('.form-input').forEach(input => {
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    document.getElementById('loginForm').submit();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
