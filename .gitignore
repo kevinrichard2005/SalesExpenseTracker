@@ -1,8 +1,5 @@
 # Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
+
 .Python
 build/
 develop-eggs/
@@ -49,10 +46,6 @@ Thumbs.db
 # Uploads
 uploads/
 !uploads/.gitkeep
-
-# Charts
-static/charts/*.png
-!static/charts/.gitkeep
 
 # Environment variables
 .env

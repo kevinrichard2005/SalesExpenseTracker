@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, send_file, Response, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, send_file, Response, flash, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_bcrypt import Bcrypt
@@ -15,10 +15,9 @@ import json
 import pandas as pd
 import numpy as np
 from werkzeug.utils import secure_filename
-import uuid
 
-# FIXED: Set template folder to current directory and static folder to 'static'
-app = Flask(__name__, template_folder='.', static_folder='static', static_url_path='/static')
+# FIXED: Remove template_folder='.' from constructor
+app = Flask(__name__, static_folder='static')
 
 # Railway configuration
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(32))
@@ -306,7 +305,7 @@ def create_charts(results, prefix):
         chart_path = f'static/charts/{prefix}_products.png'
         plt.savefig(chart_path, dpi=100, bbox_inches='tight')
         plt.close()
-        charts['products'] = chart_path
+        charts['products'] = f'/static/charts/{prefix}_products.png'
     except Exception as e:
         print(f"Products chart error: {e}")
     
@@ -330,7 +329,7 @@ def create_charts(results, prefix):
         chart_path = f'static/charts/{prefix}_categories.png'
         plt.savefig(chart_path, dpi=100, bbox_inches='tight')
         plt.close()
-        charts['categories'] = chart_path
+        charts['categories'] = f'/static/charts/{prefix}_categories.png'
     except Exception as e:
         print(f"Categories chart error: {e}")
     
@@ -363,7 +362,7 @@ def create_charts(results, prefix):
         chart_path = f'static/charts/{prefix}_regions.png'
         plt.savefig(chart_path, dpi=100, bbox_inches='tight')
         plt.close()
-        charts['regions'] = chart_path
+        charts['regions'] = f'/static/charts/{prefix}_regions.png'
     except Exception as e:
         print(f"Regions chart error: {e}")
     
@@ -388,11 +387,16 @@ def create_charts(results, prefix):
             chart_path = f'static/charts/{prefix}_monthly.png'
             plt.savefig(chart_path, dpi=100, bbox_inches='tight')
             plt.close()
-            charts['monthly'] = chart_path
+            charts['monthly'] = f'/static/charts/{prefix}_monthly.png'
     except Exception as e:
         print(f"Monthly chart error: {e}")
     
     return charts
+
+# Static file serving route
+@app.route('/static/<path:filename>')
+def serve_static(filename):
+    return send_from_directory('static', filename)
 
 # ==================== AUTHENTICATION ROUTES ====================
 
@@ -723,7 +727,7 @@ def get_analysis_data():
 @app.route('/charts/<path:filename>')
 def serve_chart(filename):
     try:
-        return send_file(f'static/charts/{filename}')
+        return send_from_directory('static/charts', filename)
     except:
         return "Chart not found", 404
 
