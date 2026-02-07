@@ -16,8 +16,8 @@ import pandas as pd
 import numpy as np
 from werkzeug.utils import secure_filename
 
-# FIXED: Remove template_folder='.' from constructor
-app = Flask(__name__, static_folder='static')
+# FIXED: Keep template_folder='.' since HTML files are in root
+app = Flask(__name__, template_folder='.', static_folder='static')
 
 # Railway configuration
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(32))
@@ -731,13 +731,44 @@ def serve_chart(filename):
     except:
         return "Chart not found", 404
 
+# Simple error handler without templates for now
 @app.errorhandler(404)
 def not_found(e):
-    return render_template('error.html', error='Page not found'), 404
+    return """
+    <html>
+    <head>
+        <title>404 - Page Not Found</title>
+        <style>
+            body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+            h1 { color: #f44336; }
+        </style>
+    </head>
+    <body>
+        <h1>404 - Page Not Found</h1>
+        <p>The page you are looking for does not exist.</p>
+        <a href="/">Go to Home</a>
+    </body>
+    </html>
+    """, 404
 
 @app.errorhandler(500)
 def server_error(e):
-    return render_template('error.html', error='Server error'), 500
+    return """
+    <html>
+    <head>
+        <title>500 - Server Error</title>
+        <style>
+            body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+            h1 { color: #f44336; }
+        </style>
+    </head>
+    <body>
+        <h1>500 - Server Error</h1>
+        <p>Something went wrong on our server.</p>
+        <a href="/">Go to Home</a>
+    </body>
+    </html>
+    """, 500
 
 # ==================== INITIAL SETUP ====================
 
